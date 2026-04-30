@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent Patterns — Reference Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --danger: #ef4444;
+    --solid-s: #00e5ff;
+    --solid-o: #7c3aed;
+    --solid-l: #10b981;
+    --solid-i: #f59e0b;
+    --solid-d: #f43f5e;
+    --code-bg: #0d1117;
+    --code-border: #21262d;
+    --sidebar-w: 280px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    line-height: 1.7;
+  }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo .logo-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-logo h1 {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .sidebar-logo h1 span { color: var(--accent); }
+
+  .nav-section {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 24px 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 24px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+
+  .nav-item.active {
+    color: var(--accent);
+    background: rgba(0,229,255,0.06);
+  }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  .nav-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-muted);
+  }
+
+  .nav-item.active .nav-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    line-height: 1.7;
+  }
+
+  /* ─── MAIN ─── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ─── PROGRESS ─── */
+  #progress {
+    position: fixed;
+    top: 0; left: var(--sidebar-w); right: 0;
+    height: 2px;
+    background: var(--border);
+    z-index: 200;
+  }
+
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width 0.1s;
+  }
+
+  /* ─── HERO ─── */
+  #hero {
+    padding: 80px 72px 60px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse 80% 60% at 60% 0%, rgba(0,229,255,0.05) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 90% 80%, rgba(124,58,237,0.06) 0%, transparent 60%);
+  }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  #hero h2 {
+    font-size: clamp(32px, 4vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: #fff;
+  }
+
+  #hero h2 .hl { color: var(--accent); }
+
+  .hero-desc {
+    max-width: 560px;
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 36px;
+  }
+
+  .hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .pill {
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    border: 1px solid;
+    font-weight: 700;
+  }
+
+  .pill-cyan { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.07); }
+  .pill-purple { border-color: var(--accent2); color: var(--accent2); background: rgba(124,58,237,0.07); }
+  .pill-green { border-color: var(--accent3); color: var(--accent3); background: rgba(16,185,129,0.07); }
+  .pill-amber { border-color: var(--accent4); color: var(--accent4); background: rgba(245,158,11,0.07); }
+  .pill-red { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.07); }
+
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .pattern-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 16px 18px;
+    text-decoration: none;
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
+    display: block;
+  }
+
+  .pattern-card:hover { border-color: var(--accent); transform: translateY(-2px); background: var(--surface2); }
+
+  .pattern-card .pc-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .pattern-card .pc-name { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .pattern-card .pc-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ─── CONTENT SECTIONS ─── */
+  .section {
+    padding: 60px 72px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .section-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .section-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .section h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 32px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 24px 0 10px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .section p {
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    font-size: 15px;
+    max-width: 760px;
+  }
+
+  /* ─── CODE BLOCKS ─── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+    position: relative;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: #161b22;
+    border-bottom: 1px solid var(--code-border);
+  }
+
+  .code-header .filename {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .code-header .lang-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--accent3);
+    background: rgba(16,185,129,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent3); color: var(--accent3); }
+
+  pre {
+    padding: 20px;
+    overflow-x: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #c9d1d9;
+  }
+
+  .kw { color: #ff7b72; }
+  .fn { color: #d2a8ff; }
+  .cl { color: #ffa657; }
+  .st { color: #a5d6ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .nm { color: #79c0ff; }
+  .dc { color: #7ee787; }
+  .tp { color: #ffa657; }
+  .op { color: #ff7b72; }
+
+  /* ─── CALLOUTS ─── */
+  .callout {
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 20px 0;
+    border-left: 3px solid;
+    font-size: 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout-body { flex: 1; }
+  .callout-body strong { display: block; margin-bottom: 4px; font-size: 13px; }
+  .callout-body p { font-size: 13px; margin: 0; color: inherit; max-width: none; }
+
+  .callout-info { background: rgba(0,229,255,0.05); border-color: var(--accent); color: #a5d6ff; }
+  .callout-warn { background: rgba(245,158,11,0.06); border-color: var(--accent4); color: #fde68a; }
+  .callout-success { background: rgba(16,185,129,0.06); border-color: var(--accent3); color: #a7f3d0; }
+  .callout-danger { background: rgba(239,68,68,0.06); border-color: var(--danger); color: #fca5a5; }
+
+  /* ─── FLOW DIAGRAMS ─── */
+  .flow-diagram {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 16px 0;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .flow-step {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  .fs-cyan { border-color: rgba(0,229,255,0.3); color: var(--accent); background: rgba(0,229,255,0.07); }
+  .fs-purple { border-color: rgba(124,58,237,0.3); color: #a78bfa; background: rgba(124,58,237,0.07); }
+  .fs-green { border-color: rgba(16,185,129,0.3); color: var(--accent3); background: rgba(16,185,129,0.07); }
+  .fs-amber { border-color: rgba(245,158,11,0.3); color: var(--accent4); background: rgba(245,158,11,0.07); }
+  .fs-red { border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.07); }
+  .fs-gray { border-color: var(--border); color: var(--text-dim); background: var(--surface2); }
+
+  .flow-arrow { color: var(--text-muted); font-size: 14px; }
+  .flow-loop { color: var(--accent4); font-size: 13px; font-family: 'Space Mono', monospace; font-weight: 700; }
+
+  /* ─── PROS/CONS ─── */
+  .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+
+  .pc-box {
+    border-radius: 10px;
+    padding: 16px 18px;
+    border: 1px solid;
+  }
+
+  .pc-box.pro { border-color: rgba(16,185,129,0.25); background: rgba(16,185,129,0.05); }
+  .pc-box.con { border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.05); }
+
+  .pc-box .pc-head {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .pc-box.pro .pc-head { color: var(--accent3); }
+  .pc-box.con .pc-head { color: #f87171; }
+
+  .pc-box p { font-size: 13px; color: var(--text-dim); margin: 0; max-width: none; line-height: 1.6; }
+
+  /* ─── PATTERN SECTIONS ─── */
+  .pattern-section {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+
+  .pattern-section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .ps-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 28px;
+  }
+
+  .ps-name { font-size: 18px; font-weight: 800; color: #fff; }
+  .ps-tag {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid;
+    font-weight: 700;
+  }
+
+  .tag-cyan { border-color: rgba(0,229,255,0.3); color: var(--accent); background: rgba(0,229,255,0.07); }
+  .tag-purple { border-color: rgba(124,58,237,0.3); color: #a78bfa; background: rgba(124,58,237,0.07); }
+  .tag-green { border-color: rgba(16,185,129,0.3); color: var(--accent3); background: rgba(16,185,129,0.07); }
+  .tag-amber { border-color: rgba(245,158,11,0.3); color: var(--accent4); background: rgba(245,158,11,0.07); }
+  .tag-red { border-color: rgba(239,68,68,0.3); color: #f87171; background: rgba(239,68,68,0.07); }
+
+  .pattern-section-body { padding: 24px; }
+  .pattern-section-body p { font-size: 14px; color: var(--text-dim); margin-bottom: 16px; max-width: none; }
+
+  .ps-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 18px 0 8px;
+  }
+
+  /* ─── TWO COL ─── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+
+  .bad-good { border-radius: 8px; overflow: hidden; border: 1px solid var(--code-border); }
+  .bad-good-header {
+    padding: 8px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .bad-good.bad .bad-good-header { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .bad-good.good .bad-good-header { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+  .bad-good pre { font-size: 11.5px; padding: 14px 16px; border-top: 1px solid var(--code-border); }
+
+  /* ─── FRAMEWORK GRID ─── */
+  .fw-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+  }
+
+  .fw-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .fw-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .fw-card .fw-name { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .fw-card .fw-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
+
+  .fw-tag { display: inline-block; font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 7px; border-radius: 4px; border: 1px solid; margin: 2px; }
+  .fw-tag-cyan { border-color: rgba(0,229,255,0.3); color: var(--accent); background: rgba(0,229,255,0.05); }
+  .fw-tag-purple { border-color: rgba(124,58,237,0.3); color: #a78bfa; background: rgba(124,58,237,0.05); }
+  .fw-tag-green { border-color: rgba(16,185,129,0.3); color: var(--accent3); background: rgba(16,185,129,0.05); }
+  .fw-tag-amber { border-color: rgba(245,158,11,0.3); color: var(--accent4); background: rgba(245,158,11,0.05); }
+
+  /* ─── TERMINAL ─── */
+  .terminal {
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  .terminal-bar {
+    background: #1a1a1a;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #333;
+  }
+
+  .t-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .t-dot.r { background: #ff5f57; }
+  .t-dot.y { background: #febc2e; }
+  .t-dot.g { background: #28c840; }
+
+  .terminal-title { font-family: 'Space Mono', monospace; font-size: 11px; color: #666; margin-left: auto; }
+
+  .terminal pre {
+    color: #22d3ee;
+    font-size: 12.5px;
+    line-height: 1.9;
+    padding: 16px 20px;
+  }
+
+  .terminal pre .prompt { color: #7ee787; }
+  .terminal pre .output { color: #94a3b8; }
+
+  /* ─── INLINE CODE ─── */
+  code {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.15);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  /* ─── CHOOSING TABLE ─── */
+  .choose-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+  .choose-table th {
+    text-align: left;
+    padding: 10px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .choose-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+  .choose-table tr:last-child td { border-bottom: none; }
+  .choose-table tr:hover td { background: var(--surface2); }
+  .choose-table td:first-child { color: var(--text); font-weight: 600; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    #sidebar { transform: translateX(-100%); }
+    #main { margin-left: 0; }
+    #progress { left: 0; }
+    .section { padding: 40px 28px; }
+    #hero { padding: 50px 28px 40px; }
+    .two-col { grid-template-columns: 1fr; }
+    .fw-grid { grid-template-columns: 1fr; }
+    .pros-cons { grid-template-columns: 1fr; }
+    .pattern-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="progress"><div id="progress-bar"></div></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-tag">Reference</div>
+    <h1>AI Agent <span>Patterns</span></h1>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Overview</div>
+    <a href="#hero" class="nav-item active">
+      <div class="nav-dot"></div> Introduction
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Core Patterns</div>
+    <a href="#react" class="nav-item">
+      <div class="nav-dot"></div> ReAct
+    </a>
+    <a href="#plan" class="nav-item">
+      <div class="nav-dot"></div> Plan &amp; Execute
+    </a>
+    <a href="#reflect" class="nav-item">
+      <div class="nav-dot"></div> Reflection
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Tool &amp; Knowledge</div>
+    <a href="#tools" class="nav-item">
+      <div class="nav-dot"></div> Tool-calling
+    </a>
+    <a href="#rag" class="nav-item">
+      <div class="nav-dot"></div> RAG
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Scaling</div>
+    <a href="#multi" class="nav-item">
+      <div class="nav-dot"></div> Multi-agent
+    </a>
+    <a href="#memory" class="nav-item">
+      <div class="nav-dot"></div> Memory
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Production</div>
+    <a href="#control" class="nav-item">
+      <div class="nav-dot"></div> Control Flow
+    </a>
+    <a href="#reliability" class="nav-item">
+      <div class="nav-dot"></div> Reliability
+    </a>
+    <a href="#choosing" class="nav-item">
+      <div class="nav-dot"></div> Choosing a Pattern
+    </a>
+    <a href="#frameworks" class="nav-item">
+      <div class="nav-dot"></div> Frameworks
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    v1.0.0 — 2025<br>
+    9 patterns · 3 categories
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main id="main">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-eyebrow">AI Engineering Reference</div>
+    <h2>Common <span class="hl">AI Agent</span><br>Design Patterns</h2>
+    <p class="hero-desc">
+      A practical guide to architectural patterns for building reliable, scalable, and production-ready AI agents — from single-loop reasoners to complex multi-agent systems.
+    </p>
+    <div class="hero-pills">
+      <span class="pill pill-cyan">ReAct</span>
+      <span class="pill pill-purple">Plan &amp; Execute</span>
+      <span class="pill pill-green">Reflection</span>
+      <span class="pill pill-amber">Tool-calling</span>
+      <span class="pill pill-cyan">RAG</span>
+      <span class="pill pill-purple">Multi-agent</span>
+      <span class="pill pill-green">Memory</span>
+      <span class="pill pill-amber">Control Flow</span>
+      <span class="pill pill-red">Reliability</span>
+    </div>
+
+    <div class="pattern-grid">
+      <a href="#react" class="pattern-card">
+        <div class="pc-label">Pattern 01</div>
+        <div class="pc-name">ReAct</div>
+        <div class="pc-desc">Interleaved reasoning and action loops</div>
+      </a>
+      <a href="#plan" class="pattern-card">
+        <div class="pc-label">Pattern 02</div>
+        <div class="pc-name">Plan &amp; Execute</div>
+        <div class="pc-desc">Upfront planning, sequential execution</div>
+      </a>
+      <a href="#reflect" class="pattern-card">
+        <div class="pc-label">Pattern 03</div>
+        <div class="pc-name">Reflection</div>
+        <div class="pc-desc">Self-critique and iterative refinement</div>
+      </a>
+      <a href="#tools" class="pattern-card">
+        <div class="pc-label">Pattern 04</div>
+        <div class="pc-name">Tool-calling</div>
+        <div class="pc-desc">Dynamic runtime tool selection</div>
+      </a>
+      <a href="#rag" class="pattern-card">
+        <div class="pc-label">Pattern 05</div>
+        <div class="pc-name">RAG</div>
+        <div class="pc-desc">Retrieval-augmented generation</div>
+      </a>
+      <a href="#multi" class="pattern-card">
+        <div class="pc-label">Pattern 06</div>
+        <div class="pc-name">Multi-agent</div>
+        <div class="pc-desc">Orchestrators &amp; specialist subagents</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ─── REACT ─── -->
+  <section class="section" id="react">
+    <div class="section-header">
+      <div class="section-icon">🔄</div>
+      <div>
+        <div class="section-num">Pattern 01</div>
+        <h2>ReAct — Reasoning + Acting</h2>
+      </div>
+    </div>
+
+    <p>ReAct interleaves <strong style="color:var(--accent)">Thought</strong>, <strong style="color:#a78bfa">Action</strong>, and <strong style="color:var(--accent3)">Observation</strong> steps in a tight loop. Each observation feeds directly into the next reasoning step, allowing the agent to correct course mid-task without external intervention.</p>
+
+    <div class="callout callout-info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <strong>Key insight</strong>
+        <p>The agent never commits to a full plan upfront. Instead it reasons one step at a time, adapting as new information arrives from tool observations.</p>
+      </div>
+    </div>
+
+    <div class="ps-sub">Flow</div>
+    <div class="flow-diagram">
+      <span class="flow-step fs-cyan">Thought</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-purple">Action</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-green">Observation</span>
+      <span class="flow-loop">↻ loop</span>
+      <span class="flow-step fs-cyan">Thought</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-purple">Action</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-amber">Final Answer</span>
+    </div>
+
+    <div class="ps-sub">Example trace</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">react_trace.txt</span>
+        <span class="lang-tag">trace</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="cm">Thought:</span> I need to find the population of Tokyo.
+<span class="dc">Action:</span>  web_search(<span class="st">"Tokyo population 2024"</span>)
+<span class="nm">Obs:</span>     Tokyo city proper has ~13.96 million residents.
+
+<span class="cm">Thought:</span> The user asked for metro area, not city proper.
+<span class="dc">Action:</span>  web_search(<span class="st">"Tokyo metro area population"</span>)
+<span class="nm">Obs:</span>     Greater Tokyo Area: ~37.4 million.
+
+<span class="cm">Thought:</span> I now have the correct figure.
+<span class="kw">Answer:</span>  The Greater Tokyo metro area has ~37.4 million people.</pre>
+    </div>
+
+    <div class="ps-sub">Implementation</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">react_agent.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">react_agent</span>(task: <span class="tp">str</span>, tools: <span class="tp">dict</span>, max_steps: <span class="tp">int</span> = <span class="nm">10</span>):
+    history = [{ <span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: task }]
+
+    <span class="kw">for</span> step <span class="kw">in</span> <span class="fn">range</span>(max_steps):
+        response = llm.complete(
+            system=REACT_PROMPT,
+            messages=history
+        )
+
+        <span class="cm"># Parse Thought / Action / Answer</span>
+        parsed = <span class="fn">parse_react</span>(response)
+
+        <span class="kw">if</span> parsed.type == <span class="st">"answer"</span>:
+            <span class="kw">return</span> parsed.content   <span class="cm"># Done</span>
+
+        <span class="cm"># Execute the chosen tool</span>
+        tool_fn = tools[parsed.action]
+        observation = <span class="fn">tool_fn</span>(**parsed.args)
+
+        history.append({ <span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response })
+        history.append({ <span class="st">"role"</span>: <span class="st">"tool"</span>, <span class="st">"content"</span>: observation })
+
+    <span class="kw">raise</span> <span class="cl">TimeoutError</span>(<span class="st">"Max steps reached"</span>)</pre>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Adapts mid-task — observations can redirect reasoning before wasting more steps on a wrong path. Excellent for open-ended research tasks.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Can spiral into long loops. Without a step cap the agent may oscillate and burn tokens chasing irrelevant sub-questions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PLAN & EXECUTE ─── -->
+  <section class="section" id="plan">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div>
+        <div class="section-num">Pattern 02</div>
+        <h2>Plan &amp; Execute</h2>
+      </div>
+    </div>
+
+    <p>Separate planning from doing. A <strong style="color:#a78bfa">Planner LLM</strong> decomposes the goal into a concrete task list, then an <strong style="color:var(--accent)">Executor LLM</strong> works through each step in sequence. The plan can be inspected and edited before execution begins.</p>
+
+    <div class="ps-sub">Flow</div>
+    <div class="flow-diagram">
+      <span class="flow-step fs-gray">User goal</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-purple">Planner LLM</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-amber">Step list</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-cyan">Executor LLM</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-green">Result</span>
+    </div>
+
+    <div class="ps-sub">Example</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">plan_execute.txt</span>
+        <span class="lang-tag">trace</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="cm">Goal: "Write a competitive analysis report on Notion vs Linear"</span>
+
+<span class="kw">Plan:</span>
+  <span class="nm">1.</span> Search for Notion key features
+  <span class="nm">2.</span> Search for Linear key features
+  <span class="nm">3.</span> Retrieve current pricing for both
+  <span class="nm">4.</span> Retrieve user sentiment / reviews
+  <span class="nm">5.</span> Draft a side-by-side comparison table
+  <span class="nm">6.</span> Write 300-word executive summary
+
+<span class="dc">Executor runs steps 1–6 in sequence,</span>
+<span class="dc">each tool call building on the previous result.</span></pre>
+    </div>
+
+    <div class="ps-sub">Implementation</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">plan_execute.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">plan_and_execute</span>(goal: <span class="tp">str</span>):
+    <span class="cm"># Phase 1: Plan</span>
+    plan: <span class="tp">list[str]</span> = planner_llm.complete(
+        prompt=<span class="st">f"Decompose this goal into ordered steps:\n</span><span class="nm">{goal}</span><span class="st">"</span>
+    )
+
+    results = []
+
+    <span class="cm"># Phase 2: Execute each step</span>
+    <span class="kw">for</span> i, step <span class="kw">in</span> <span class="fn">enumerate</span>(plan):
+        context = <span class="fn">format_results</span>(results)
+        result = executor_llm.complete(
+            prompt=<span class="st">f"Previous results:\n</span><span class="nm">{context}</span><span class="st">\n\nNow: </span><span class="nm">{step}</span><span class="st">"</span>,
+            tools=TOOL_REGISTRY
+        )
+        results.append({ <span class="st">"step"</span>: step, <span class="st">"result"</span>: result })
+        <span class="fn">checkpoint</span>.save(i, results)   <span class="cm"># persist state</span>
+
+    <span class="kw">return</span> <span class="fn">synthesise</span>(goal, results)</pre>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Predictable and auditable — you can inspect and edit the plan before execution begins, catching bad strategies early.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Rigid — if an early step fails or returns surprising data, the plan doesn't automatically rewrite itself mid-execution.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── REFLECTION ─── -->
+  <section class="section" id="reflect">
+    <div class="section-header">
+      <div class="section-icon">🪞</div>
+      <div>
+        <div class="section-num">Pattern 03</div>
+        <h2>Reflection / Self-critique</h2>
+      </div>
+    </div>
+
+    <p>After producing output, the agent critiques its own work and iterates until quality thresholds are met or a max revision count is hit. Works exceptionally well for writing, code generation, and analysis tasks.</p>
+
+    <div class="ps-sub">Flow</div>
+    <div class="flow-diagram">
+      <span class="flow-step fs-gray">Generate draft</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-purple">Critique</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-red">Issues found?</span>
+      <span class="flow-arrow">— yes →</span>
+      <span class="flow-step fs-cyan">Revise</span>
+      <span class="flow-loop">↻ loop</span>
+      <span class="flow-step fs-green">Accept</span>
+    </div>
+
+    <div class="ps-sub">Example trace</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">reflection_trace.txt</span>
+        <span class="lang-tag">trace</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="cm">Draft:</span> <span class="st">"Python is the best language for everything."</span>
+
+<span class="kw">Critique:</span>
+  - Claim is absolute and unsupported
+  - No mention of tradeoffs (speed, typing, mobile dev)
+  - Missing comparative context
+
+<span class="dc">Revision:</span> <span class="st">"Python excels at data science and scripting due
+to its ecosystem, but compiled languages like Rust
+or Go are better suited for performance-critical
+systems or low-latency services."</span>
+
+<span class="kw">Critique:</span> Improved. Claim is qualified. <span class="nm">Accept.</span></pre>
+    </div>
+
+    <div class="ps-sub">Implementation</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">reflection.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">reflection_agent</span>(task: <span class="tp">str</span>, max_revisions: <span class="tp">int</span> = <span class="nm">3</span>):
+    draft = generator_llm.complete(task)
+
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(max_revisions):
+        critique = critic_llm.complete(
+            prompt=<span class="st">f"Critique this output:\n</span><span class="nm">{draft}</span><span class="st">"</span>,
+            schema=CritiqueSchema   <span class="cm"># structured JSON</span>
+        )
+
+        <span class="kw">if</span> critique.approved:
+            <span class="kw">break</span>
+
+        draft = generator_llm.complete(
+            prompt=<span class="st">f"Revise based on this critique:\n</span><span class="nm">{critique.issues}</span><span class="st">"</span>,
+            context=draft
+        )
+
+    <span class="kw">return</span> draft</pre>
+    </div>
+
+    <div class="callout callout-warn">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-body">
+        <strong>Cost consideration</strong>
+        <p>Reflection runs 2–3× more LLM calls per task. Set a sensible <code>max_revisions</code> and use a cheaper model for the critic to keep costs manageable.</p>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Consistently raises output quality. Works well for writing, code review, and complex reasoning where first drafts are rarely optimal.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>2–3× more expensive per task. The critic can sometimes nitpick trivialities rather than catching substantive problems.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TOOL-CALLING ─── -->
+  <section class="section" id="tools">
+    <div class="section-header">
+      <div class="section-icon">🔧</div>
+      <div>
+        <div class="section-num">Pattern 04</div>
+        <h2>Tool-calling Agent</h2>
+      </div>
+    </div>
+
+    <p>The LLM is equipped with a schema-defined set of tools and decides which to invoke — and in what order — at runtime. This is the backbone of most production agents today and is natively supported by all major model providers.</p>
+
+    <div class="ps-sub">Flow</div>
+    <div class="flow-diagram">
+      <span class="flow-step fs-gray">User message</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-cyan">LLM</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-amber">Tool call</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-gray">Tool result</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-cyan">LLM</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-green">Response</span>
+    </div>
+
+    <div class="ps-sub">Defining a tool</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">tools.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">get_weather</span>(city: <span class="tp">str</span>, units: <span class="tp">str</span> = <span class="st">"celsius"</span>) -> <span class="tp">dict</span>:
+    <span class="st">"""Get current weather conditions for a given city."""</span>
+    <span class="kw">return</span> weather_api.fetch(city, units)
+
+<span class="dc">@tool</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(query: <span class="tp">str</span>, max_results: <span class="tp">int</span> = <span class="nm">5</span>) -> <span class="tp">list[str]</span>:
+    <span class="st">"""Search the web and return top result snippets."""</span>
+    <span class="kw">return</span> search_engine.query(query)[:max_results]
+
+<span class="cm"># The LLM receives schemas for all tools automatically</span>
+agent = <span class="cl">Agent</span>(tools=[get_weather, web_search, run_code, send_email])</pre>
+    </div>
+
+    <div class="ps-sub">Example exchange</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">tool_calling_trace.txt</span>
+        <span class="lang-tag">trace</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="cm">User:</span> <span class="st">"What's the weather in Paris — should I pack an umbrella?"</span>
+
+<span class="kw">LLM selects:</span> get_weather(city=<span class="st">"Paris"</span>, units=<span class="st">"celsius"</span>)
+<span class="nm">Tool returns:</span> { temp: 14, condition: <span class="st">"rain"</span>, humidity: 88 }
+
+<span class="dc">LLM response:</span> <span class="st">"It's 14°C and rainy in Paris — definitely
+bring an umbrella and a light jacket."</span></pre>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Highly extensible — adding a new capability is as simple as registering a new tool definition. No architectural changes needed.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Tool selection can fail on ambiguous queries. The LLM may pick the wrong tool or hallucinate incorrect parameter values.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── RAG ─── -->
+  <section class="section" id="rag">
+    <div class="section-header">
+      <div class="section-icon">📚</div>
+      <div>
+        <div class="section-num">Pattern 05</div>
+        <h2>RAG — Retrieval-Augmented Generation</h2>
+      </div>
+    </div>
+
+    <p>Query a knowledge base at runtime and inject retrieved context into the prompt to ground the LLM's response. Retrieval is treated as a tool: the agent embeds the query, searches a vector store, and passes the top-k chunks as context.</p>
+
+    <div class="ps-sub">Flow</div>
+    <div class="flow-diagram">
+      <span class="flow-step fs-gray">User query</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-purple">Embed query</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-amber">Vector search</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-cyan">Top-k chunks</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-cyan">LLM + context</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-green">Grounded answer</span>
+    </div>
+
+    <div class="ps-sub">Implementation</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">rag_agent.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">rag_query</span>(question: <span class="tp">str</span>, k: <span class="tp">int</span> = <span class="nm">3</span>) -> <span class="tp">str</span>:
+    <span class="cm"># 1. Embed the user's question</span>
+    query_embedding = embedder.encode(question)
+
+    <span class="cm"># 2. Retrieve top-k relevant chunks</span>
+    chunks = vector_db.search(
+        query=query_embedding,
+        top_k=k,
+        filter={ <span class="st">"source"</span>: <span class="st">"knowledge_base"</span> }
+    )
+
+    <span class="cm"># 3. Build grounded prompt</span>
+    context = <span class="st">"\n---\n"</span>.join(c.text <span class="kw">for</span> c <span class="kw">in</span> chunks)
+    prompt = <span class="st">f"""Answer using ONLY the context below.
+Context:
+</span><span class="nm">{context}</span><span class="st">
+
+Question: </span><span class="nm">{question}</span><span class="st">"""</span>
+
+    <span class="kw">return</span> llm.complete(prompt)</pre>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-icon">✅</div>
+      <div class="callout-body">
+        <strong>When to use RAG</strong>
+        <p>Use RAG whenever the agent needs to answer questions about a private knowledge base, recent documents, or domain-specific data that wasn't in the model's training set.</p>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Keeps responses grounded in real documents — dramatically reduces hallucination for domain-specific knowledge bases.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Retrieval quality depends entirely on chunking and embedding strategy. Bad chunking means the right information may never surface.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── MULTI-AGENT ─── -->
+  <section class="section" id="multi">
+    <div class="section-header">
+      <div class="section-icon">🕸️</div>
+      <div>
+        <div class="section-num">Pattern 06</div>
+        <h2>Multi-agent — Orchestrator / Subagents</h2>
+      </div>
+    </div>
+
+    <p>A central orchestrator delegates subtasks to specialized subagents, each with their own tools, context windows, and capabilities. Subagents can run sequentially or in parallel depending on task dependencies.</p>
+
+    <div class="ps-sub">Architecture</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">multi_agent.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">class</span> <span class="cl">Orchestrator</span>:
+    <span class="kw">def</span> <span class="fn">run</span>(<span class="kw">self</span>, goal: <span class="tp">str</span>):
+        plan = <span class="kw">self</span>.plan(goal)
+
+        results = {}
+        <span class="kw">for</span> task <span class="kw">in</span> plan.tasks:
+            <span class="cm"># Route to the right specialist</span>
+            agent = <span class="kw">self</span>.agents[task.type]
+            results[task.id] = agent.<span class="fn">run</span>(
+                task=task.description,
+                context=<span class="fn">gather_deps</span>(task.deps, results)
+            )
+
+        <span class="kw">return</span> <span class="kw">self</span>.<span class="fn">synthesise</span>(goal, results)
+
+researcher = <span class="cl">Agent</span>(tools=[web_search, read_url])
+coder      = <span class="cl">Agent</span>(tools=[run_python, read_file, write_file])
+critic     = <span class="cl">Agent</span>(tools=[])   <span class="cm"># reasoning only</span>
+
+orchestrator = <span class="cl">Orchestrator</span>(agents={
+    <span class="st">"research"</span>: researcher,
+    <span class="st">"code"</span>:     coder,
+    <span class="st">"review"</span>:   critic,
+})</pre>
+    </div>
+
+    <div class="ps-sub">Example delegation</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">multi_agent_trace.txt</span>
+        <span class="lang-tag">trace</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="cm">User: "Build a sales dashboard for Q1 data"</span>
+
+<span class="kw">Orchestrator:</span>
+  <span class="nm">1.</span> → Researcher: <span class="st">"Find KPIs for SaaS sales dashboards"</span>
+  <span class="nm">2.</span> → Coder:      <span class="st">"Parse Q1_sales.csv, compute by-region totals"</span>
+  <span class="nm">3.</span> → Coder:      <span class="st">"Generate Plotly chart for revenue by region"</span>
+  <span class="nm">4.</span> → Critic:     <span class="st">"Review chart for accuracy and clarity"</span>
+  <span class="nm">5.</span> → Orchestrator: Assemble final report</pre>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Parallelizable and scalable — independent agents can run concurrently, and adding specialists doesn't complicate existing agents.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Coordination overhead is real — orchestrators can misroute tasks, and debugging failures across agents is significantly more complex.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── MEMORY ─── -->
+  <section class="section" id="memory">
+    <div class="section-header">
+      <div class="section-icon">🧠</div>
+      <div>
+        <div class="section-num">Pattern 07</div>
+        <h2>Memory Patterns</h2>
+      </div>
+    </div>
+
+    <p>Strategies for giving agents access to information beyond the immediate context window. Different memory types serve different needs — from sub-second scratchpad state to cross-session personalisation.</p>
+
+    <h3>Memory types</h3>
+
+    <div class="fw-grid" style="grid-template-columns: repeat(2, 1fr);">
+      <div class="fw-card">
+        <div class="fw-name">In-context</div>
+        <div class="fw-desc">Everything lives in the prompt. Simple and zero-latency, but bounded by the token window. Best for short, self-contained tasks.</div>
+        <span class="fw-tag fw-tag-cyan">zero latency</span>
+        <span class="fw-tag fw-tag-green">simple</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">External (vector DB)</div>
+        <div class="fw-desc">Memories stored as embeddings, retrieved by semantic similarity. Enables long-term recall across sessions and users.</div>
+        <span class="fw-tag fw-tag-purple">long-term</span>
+        <span class="fw-tag fw-tag-amber">retrieval</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">Episodic</div>
+        <div class="fw-desc">A structured log of past interactions replayed selectively. Gives the agent a sense of history without full context replay cost.</div>
+        <span class="fw-tag fw-tag-cyan">history</span>
+        <span class="fw-tag fw-tag-green">selective</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">Scratchpad</div>
+        <div class="fw-desc">Working memory within a single run — intermediate results stored in a variable or temp file, not persisted between turns.</div>
+        <span class="fw-tag fw-tag-green">ephemeral</span>
+        <span class="fw-tag fw-tag-amber">in-run</span>
+      </div>
+    </div>
+
+    <div class="ps-sub">External memory read/write</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">memory.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="cm"># Write a memory</span>
+memory.<span class="fn">store</span>(
+    key=<span class="st">"user_prefs"</span>,
+    value=<span class="st">"Prefers Python over JavaScript"</span>,
+    user_id=user.id
+)
+
+<span class="cm">--- next session ---</span>
+
+<span class="cm"># Retrieve relevant memories before responding</span>
+memories = memory.<span class="fn">retrieve</span>(
+    query=<span class="st">"Write a script to parse this CSV"</span>,
+    user_id=user.id,
+    top_k=<span class="nm">3</span>
+)
+
+<span class="cm"># Inject into system prompt</span>
+system = <span class="st">f"User preferences:\n</span><span class="nm">{memories}</span><span class="st">\n\nYou are a helpful assistant."</span>
+<span class="cm"># → Agent now writes Python, not JS, unprompted</span></pre>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>External memory lets agents personalise behaviour over time without context-window limits — key for long-running assistants and agentic workflows.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Memory retrieval adds latency and a new failure surface. Stale or irrelevant memories can mislead the agent or introduce outdated information.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CONTROL FLOW ─── -->
+  <section class="section" id="control">
+    <div class="section-header">
+      <div class="section-icon">🔀</div>
+      <div>
+        <div class="section-num">Pattern 08</div>
+        <h2>Control Flow Patterns</h2>
+      </div>
+    </div>
+
+    <p>How the agent decides what to do next — fixed sequence, LLM-driven dynamic routing, or human checkpoints. The right choice depends on how predictable your task domain is and the consequences of routing errors.</p>
+
+    <h3>Fixed pipeline</h3>
+    <div class="flow-diagram">
+      <span class="flow-step fs-gray">Ingest</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-gray">Classify</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-gray">Enrich</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-green">Respond</span>
+    </div>
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Deterministic and easy to test — same input always flows the same way. Simple to monitor and debug in production.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Cannot adapt when a step's output is unexpected, incomplete, or outside the anticipated distribution.</p>
+      </div>
+    </div>
+
+    <h3>Dynamic routing</h3>
+    <div class="flow-diagram">
+      <span class="flow-step fs-gray">Input</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-purple">LLM router</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-amber">Path A</span>
+      <span class="flow-arrow">/</span>
+      <span class="flow-step fs-amber">Path B</span>
+      <span class="flow-arrow">/</span>
+      <span class="flow-step fs-amber">Path C</span>
+    </div>
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Flexible — the agent selects the best handler for each input type at runtime, without hardcoded conditional logic.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Router errors cascade. A misclassified input goes down the entirely wrong path, often silently, with no obvious failure signal.</p>
+      </div>
+    </div>
+
+    <h3>Human-in-the-loop</h3>
+    <div class="flow-diagram">
+      <span class="flow-step fs-cyan">Draft action</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-red">⏸ Await approval</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step fs-green">Execute</span>
+    </div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">hitl.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">hitl_agent</span>(task: <span class="tp">str</span>):
+    proposed_action = agent.<span class="fn">plan</span>(task)
+
+    <span class="cm"># Pause and surface to human</span>
+    approval = ui.<span class="fn">request_approval</span>(
+        action=proposed_action,
+        timeout_seconds=<span class="nm">300</span>
+    )
+
+    <span class="kw">if</span> approval.approved:
+        <span class="kw">return</span> agent.<span class="fn">execute</span>(proposed_action)
+    <span class="kw">else</span>:
+        <span class="kw">return</span> agent.<span class="fn">revise</span>(task, feedback=approval.reason)</pre>
+    </div>
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Catches high-stakes mistakes before they cause real-world effects — sending emails, running SQL deletions, making API calls.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Breaks automation; approval latency can become a severe bottleneck for high-volume or time-sensitive workflows.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── RELIABILITY ─── -->
+  <section class="section" id="reliability">
+    <div class="section-header">
+      <div class="section-icon">🛡️</div>
+      <div>
+        <div class="section-num">Pattern 09</div>
+        <h2>Reliability Patterns</h2>
+      </div>
+    </div>
+
+    <p>Techniques that make agent outputs safe, consistent, and recoverable. These are not optional in production — they are the difference between an agent that works occasionally and one that works reliably at scale.</p>
+
+    <h3>Structured outputs</h3>
+    <p>Force schema-compliant JSON from the LLM so downstream code can parse without fragile string manipulation.</p>
+
+    <div class="two-col">
+      <div class="bad-good bad">
+        <div class="bad-good-header">✗ Free-form output</div>
+        <pre><span class="cm">"I think I should search
+for current weather data
+in Paris to answer this."</span></pre>
+      </div>
+      <div class="bad-good good">
+        <div class="bad-good-header">✓ Structured output</div>
+        <pre><span class="dc">{
+  "action": "get_weather",
+  "args": { "city": "Paris" },
+  "confidence": 0.95
+}</span></pre>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Downstream code can parse outputs reliably without fragile regex or error-prone prompt re-runs.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Strict schemas can cause the model to truncate reasoning or omit nuance in order to fit the required structure.</p>
+      </div>
+    </div>
+
+    <h3>Retry / Fallback</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">retry.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">def</span> <span class="fn">resilient_run</span>(task: <span class="tp">str</span>):
+    <span class="kw">try</span>:
+        <span class="kw">return</span> agent.<span class="fn">run</span>(task, model=<span class="st">"claude-opus-4"</span>)
+    <span class="kw">except</span> <span class="cl">ToolCallError</span>:
+        <span class="fn">log_degraded</span>(task)
+        <span class="kw">return</span> agent.<span class="fn">run</span>(task, model=<span class="st">"claude-haiku-4-5"</span>)
+    <span class="kw">except</span> <span class="cl">RateLimitError</span>:
+        <span class="fn">time.sleep</span>(<span class="nm">2</span> ** retry_count)
+        <span class="kw">return</span> <span class="fn">resilient_run</span>(task)</pre>
+    </div>
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Graceful degradation — a cheaper/faster model handles failures instead of surfacing raw errors to the user.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Fallback outputs may be lower quality. Silent degradation can mask systemic issues in the primary model that need attention.</p>
+      </div>
+    </div>
+
+    <h3>Checkpointing</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">checkpoint.py</span>
+        <span class="lang-tag">python</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><span class="kw">for</span> i, step <span class="kw">in</span> <span class="fn">enumerate</span>(plan):
+    result = <span class="fn">execute</span>(step)
+    checkpoint.<span class="fn">save</span>(step_id=i, state=result)  <span class="cm"># persist</span>
+
+<span class="cm"># On failure at step 7 → resume from step 6, not step 0</span>
+agent.<span class="fn">resume_from</span>(checkpoint.<span class="fn">load</span>(step_id=<span class="nm">6</span>))</pre>
+    </div>
+    <div class="pros-cons">
+      <div class="pc-box pro">
+        <div class="pc-head">✓ Pro</div>
+        <p>Long-running agents can recover from crashes or timeouts without restarting from scratch — critical for expensive multi-step workflows.</p>
+      </div>
+      <div class="pc-box con">
+        <div class="pc-head">✗ Con</div>
+        <p>Adds storage overhead and requires careful state serialisation — complex to implement correctly for branching or parallel flows.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CHOOSING ─── -->
+  <section class="section" id="choosing">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div>
+        <div class="section-num">Decision guide</div>
+        <h2>Choosing a Pattern</h2>
+      </div>
+    </div>
+
+    <p>No single pattern wins across all tasks. Map your task type to the appropriate pattern before building.</p>
+
+    <table class="choose-table">
+      <thead>
+        <tr>
+          <th>Task type</th>
+          <th>Recommended pattern</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Single-step Q&amp;A</td>
+          <td><span class="pill pill-cyan" style="font-size:10px;padding:3px 10px;">RAG</span> or <span class="pill pill-amber" style="font-size:10px;padding:3px 10px;">Tool-calling</span></td>
+          <td>One retrieval or tool call is sufficient — no loop needed</td>
+        </tr>
+        <tr>
+          <td>Multi-step research</td>
+          <td><span class="pill pill-cyan" style="font-size:10px;padding:3px 10px;">ReAct</span> or <span class="pill pill-purple" style="font-size:10px;padding:3px 10px;">Plan &amp; Execute</span></td>
+          <td>Needs adaptive reasoning or structured decomposition</td>
+        </tr>
+        <tr>
+          <td>High-quality writing / code</td>
+          <td><span class="pill pill-green" style="font-size:10px;padding:3px 10px;">Reflection</span></td>
+          <td>Iterative critique consistently lifts output quality</td>
+        </tr>
+        <tr>
+          <td>Complex multi-domain workflows</td>
+          <td><span class="pill pill-purple" style="font-size:10px;padding:3px 10px;">Multi-agent</span></td>
+          <td>Each domain gets a specialist; work can parallelise</td>
+        </tr>
+        <tr>
+          <td>High-stakes / irreversible actions</td>
+          <td><span class="pill pill-red" style="font-size:10px;padding:3px 10px;">Human-in-the-loop</span></td>
+          <td>Human approval before execution prevents costly mistakes</td>
+        </tr>
+        <tr>
+          <td>Long-running pipelines</td>
+          <td><span class="pill pill-amber" style="font-size:10px;padding:3px 10px;">Checkpointing</span> + any pattern</td>
+          <td>Checkpoints allow recovery without full restarts</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-body">
+        <strong>Patterns compose</strong>
+        <p>Most production agents combine patterns. A multi-agent system might use ReAct internally within each subagent, with reflection on final outputs, structured outputs for inter-agent communication, and checkpointing for resilience.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FRAMEWORKS ─── -->
+  <section class="section" id="frameworks">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div>
+        <div class="section-num">Ecosystem</div>
+        <h2>Agent Frameworks</h2>
+      </div>
+    </div>
+
+    <p>Open-source frameworks that implement these patterns so you don't have to build from scratch.</p>
+
+    <div class="fw-grid">
+      <div class="fw-card">
+        <div class="fw-name">LangGraph</div>
+        <div class="fw-desc">Graph-based stateful agents. Nodes are agent steps; edges are transitions. Built-in checkpointing and human-in-the-loop.</div>
+        <span class="fw-tag fw-tag-cyan">stateful</span>
+        <span class="fw-tag fw-tag-green">checkpoints</span>
+        <span class="fw-tag fw-tag-purple">multi-agent</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">CrewAI</div>
+        <div class="fw-desc">Role-based multi-agent framework. Define agents with roles, goals, and backstories. Crews collaborate on tasks.</div>
+        <span class="fw-tag fw-tag-purple">multi-agent</span>
+        <span class="fw-tag fw-tag-amber">role-based</span>
+        <span class="fw-tag fw-tag-cyan">crew</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">AutoGen</div>
+        <div class="fw-desc">Microsoft's conversational multi-agent framework. Agents communicate via natural language messages in configurable topologies.</div>
+        <span class="fw-tag fw-tag-green">conversational</span>
+        <span class="fw-tag fw-tag-purple">topology</span>
+        <span class="fw-tag fw-tag-cyan">microsoft</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">LlamaIndex</div>
+        <div class="fw-desc">Data framework with first-class RAG and agentic pipeline support. Excellent for knowledge-intensive applications.</div>
+        <span class="fw-tag fw-tag-amber">RAG</span>
+        <span class="fw-tag fw-tag-green">knowledge</span>
+        <span class="fw-tag fw-tag-cyan">pipelines</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">Pydantic AI</div>
+        <div class="fw-desc">Type-safe agent framework. Structured outputs via Pydantic schemas. Strong validation guarantees at every step.</div>
+        <span class="fw-tag fw-tag-cyan">type-safe</span>
+        <span class="fw-tag fw-tag-green">validation</span>
+        <span class="fw-tag fw-tag-purple">structured</span>
+      </div>
+      <div class="fw-card">
+        <div class="fw-name">Smolagents</div>
+        <div class="fw-desc">HuggingFace's minimal agent library. Code-first approach where agents write and execute Python to complete tasks.</div>
+        <span class="fw-tag fw-tag-amber">code-first</span>
+        <span class="fw-tag fw-tag-green">minimal</span>
+        <span class="fw-tag fw-tag-cyan">HuggingFace</span>
+      </div>
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-bar">
+        <div class="t-dot r"></div>
+        <div class="t-dot y"></div>
+        <div class="t-dot g"></div>
+        <div class="terminal-title">bash — install</div>
+      </div>
+      <pre><span class="prompt">$</span> pip install langgraph
+<span class="output">Successfully installed langgraph-0.2.x</span>
+
+<span class="prompt">$</span> pip install crewai
+<span class="output">Successfully installed crewai-0.67.x</span>
+
+<span class="prompt">$</span> pip install llama-index
+<span class="output">Successfully installed llama-index-0.11.x</span>
+
+<span class="prompt">$</span> pip install pydantic-ai
+<span class="output">Successfully installed pydantic-ai-0.0.x</span></pre>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+  });
+
+  // Active nav highlight
+  const sections = document.querySelectorAll('section[id]');
+  const navItems = document.querySelectorAll('.nav-item');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navItems.forEach(n => n.classList.remove('active'));
+        const active = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Copy buttons
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText);
+    btn.textContent = 'copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  }
+</script>
+</body>
+</html>

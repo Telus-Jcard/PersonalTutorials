@@ -23,6 +23,6 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "concepts": "python3 ImportantMCPserverConcepts.py"
+    "concepts": "uv run ImportantMCPserverConcepts.py"
   }
 }
